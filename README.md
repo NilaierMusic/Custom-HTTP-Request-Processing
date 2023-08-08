@@ -69,9 +69,9 @@ Run the tests using the following command:
 npm test
 ```
 
-## Future Enhancements
+## Overview Explanation
 
-- **[Diagram Placeholder]**: A detailed architecture diagram will be added here in the future to provide a visual representation of the service interactions and flow.
+![Diagram Description](docs/image/diagram.svg)
 
 ## Contributing
 
