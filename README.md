@@ -1,5 +1,3 @@
-Certainly! Here's the updated README.md with the additional configuration setup details:
-
 ---
 
 # M1-M2 RabbitMQ Service
