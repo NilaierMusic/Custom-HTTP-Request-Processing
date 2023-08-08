@@ -1,0 +1,13 @@
+{
+  "PORT": 3000,
+  "PORT_M2": 4000,
+  "RABBITMQ_URL": "amqp://localhost",
+  "QUEUE_NAMES": {
+    "TASKS": "tasks",
+    "CALLBACK": "callback_queue"
+  },
+  "RATE_LIMIT": {
+    "WINDOW_MS": 900000,
+    "MAX_REQUESTS": 100
+  }
+}
