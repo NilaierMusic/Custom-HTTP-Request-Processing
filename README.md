@@ -2,6 +2,10 @@
 
 # M1-M2 RabbitMQ Service
 
+## Overview
+
+![Diagram Description](docs/image/diagram.svg)
+
 This repository contains the implementation of two services, M1 and M2, that communicate with each other using RabbitMQ. The M1 service receives HTTP requests, processes them, and sends tasks to the M2 service through a RabbitMQ queue. The M2 service then processes these tasks and sends the results back to M1.
 
 ## Features
@@ -69,10 +73,6 @@ Run the tests using the following command:
 npm test
 ```
 
-## Overview Explanation
-
-![Diagram Description](docs/image/diagram.svg)
-
 ## Contributing
 
 Contributions are welcome! Please read the [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on how to contribute.
@@ -83,7 +83,6 @@ This project is licensed under the MIT License. See the [LICENSE.md](LICENSE) fi
 
 ## Acknowledgments
 
-- The team and contributors who have worked on this project.
-- RabbitMQ and Node.js communities for their comprehensive documentation and resources.
+- [RabbitMQ](https://github.com/rabbitmq/rabbitmq-server) and [Node.js](https://github.com/nodejs/node) communities for their comprehensive [documentation](https://www.rabbitmq.com/documentation.html) and [resources.](https://nodejs.org/en/docs)
 
 ---
