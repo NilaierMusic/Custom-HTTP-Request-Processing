@@ -6,7 +6,7 @@ First and foremost, thank you for considering contributing to the M1-M2 RabbitMQ
 
 ## Code of Conduct
 
-By participating in this project, you are expected to uphold our Code of Conduct. Please report unacceptable behavior to [project-email@example.com].
+By participating in this project, you are expected to uphold our Code of Conduct. Please report unacceptable behavior to [nilaiermusic@gmail.com].
 
 ## Getting Started
 
