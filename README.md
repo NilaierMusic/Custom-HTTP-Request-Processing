@@ -61,6 +61,10 @@ This repository contains the implementation of two services, M1 and M2, that com
      ```bash
      npm run start:m2
      ```
+   - Start BOTH services:
+     ```bash
+     npm run start:all
+     ```
 
 5. **Verify**:
    Navigate to `http://localhost:3000/health` (or the port you've configured) in your browser or use a tool like `curl` to ensure the service is running and healthy.
