@@ -10,8 +10,8 @@
     "start:all": "concurrently \"npm run start:m1\" \"npm run start:m2\""
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Nilaier",
+  "license": "GPL-3.0",
   "dependencies": {
     "amqplib": "^0.10.3",
     "body-parser": "^1.20.2",
