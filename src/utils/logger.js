@@ -8,6 +8,7 @@ if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir);
 }
 
+// Create and configure the logger instance
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.combine(
@@ -21,6 +22,7 @@ const logger = winston.createLogger({
     ],
 });
 
+// Add console transport for non-production environments
 if (process.env.NODE_ENV !== 'production') {
     logger.add(new winston.transports.Console({
         format: winston.format.combine(
@@ -30,9 +32,10 @@ if (process.env.NODE_ENV !== 'production') {
     }));
 }
 
-// Listen for errors on the logger
+// Handle any errors that occur within the logger
 logger.on('error', (error) => {
     console.error('Error occurred in logger:', error);
 });
 
+// Export the configured logger
 module.exports = logger;
