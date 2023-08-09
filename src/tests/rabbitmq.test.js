@@ -1,12 +1,13 @@
+// Import required modules and mock external dependencies
 const amqp = require('amqplib');
 jest.mock('amqplib');
-
 const request = require('supertest');
-
 const { connect } = require('../utils/rabbitmq');
+const { processTasks, handleTaskError, handleMessage } = require('../middlewares/taskServiceM2');
 
 let m1, m2;
 
+// Test suite for RabbitMQ connections
 describe('RabbitMQ Connection', () => {
 	beforeAll(() => {
 		const mockChannel = {
@@ -37,6 +38,7 @@ describe('RabbitMQ Connection', () => {
     });
 });
 
+// Test suite for health check endpoints
 describe('Health Check Endpoints', () => {
     beforeAll(() => {
         m1 = require('../services/m1');
@@ -60,7 +62,75 @@ describe('Health Check Endpoints', () => {
     });
 });
 
-afterAll(() => {
-    if (m1 && m1.close) m1.close(); // Close m1 if it's defined
-    if (m2 && m2.close) m2.close(); // Close m2 if it's defined
+// Test suite for task processing
+describe('Task Processing', () => {
+    it('should process a task and send a response to the callback queue', async () => {
+        const mockTask = { task: 'test' };
+		const mockChannel = {
+			assertQueue: jest.fn(),
+			sendToQueue: jest.fn(),
+			consume: jest.fn(),
+            ack: jest.fn()  // Add the missing mock method
+		};
+        const mockMsg = {
+            content: Buffer.from(JSON.stringify(mockTask)),
+            properties: {
+                replyTo: 'callback_queue',
+                correlationId: 'test-id'
+            },
+			channel: mockChannel
+        };
+
+        // Directly test the handleMessage function
+        await handleMessage(mockChannel, mockMsg);
+
+        expect(mockChannel.sendToQueue).toHaveBeenCalledWith(
+            'callback_queue',
+            Buffer.from('Job done!'),
+            { correlationId: 'test-id' }
+        );
+        expect(mockChannel.ack).toHaveBeenCalledWith(mockMsg);
+    });
+});
+
+// Test suite for error handling during task processing
+describe('Error Handling', () => {
+    it('should handle malformed messages', async () => {
+        const mockChannel = {
+            nack: jest.fn()
+        };
+		const mockMsg = {
+			content: Buffer.from('malformed message'),
+			properties: {},
+			channel: mockChannel
+		};
+
+        handleTaskError(new SyntaxError(), mockMsg);
+
+        expect(mockChannel.nack).toHaveBeenCalledWith(mockMsg, false, false);
+    });
+
+    it('should handle task processing errors', async () => {
+        const mockChannel = {
+            nack: jest.fn()
+        };
+        const mockMsg = {
+            content: Buffer.from(JSON.stringify({ task: 'test' })),
+            properties: {},
+			channel: mockChannel
+        };
+
+        handleTaskError(new Error('Test error'), mockMsg);
+
+        expect(mockChannel.nack).toHaveBeenCalledWith(mockMsg, false, false);
+    });
+});
+
+// Cleanup resources after all tests
+afterAll(async () => {
+    if (m1 && m1.close) await m1.close();
+    if (m2 && m2.close) await m2.close();
+    // Close RabbitMQ connections
+    const rabbitmq = require('../utils/rabbitmq');
+    if (rabbitmq.connection) await rabbitmq.connection.close();
 });

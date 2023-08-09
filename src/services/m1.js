@@ -1,111 +1,44 @@
-const loadConfig = require('../config/configLoader');
-
-const PORT = loadConfig('PORT', 3000);
-const callbackQueue = loadConfig('QUEUE_NAMES.CALLBACK', 'callback_queue');
+// Import necessary modules and middlewares
 const express = require('express');
 const bodyParser = require('body-parser');
-const { connect } = require('../utils/rabbitmq');
 const logger = require('../utils/logger');
+const rateLimiter = require('../middlewares/rateLimiter');
+const healthCheck = require('../middlewares/healthCheck');
+const errorHandler = require('../middlewares/errorHandler');
+const { taskHandler, setupConnectionAndConsumer, shutdownGracefully } = require('../middlewares/taskServiceM1');
 
+// Load the desired port from configuration, with a default value of 3000 if not specified
+const PORT = require('../config/configLoader')('PORT', 3000);
+
+// Initialize an Express application
 const app = express();
 
-const rateLimiter = require('../middlewares/rateLimiter');
+// Middleware for limiting the rate of requests
 app.use(rateLimiter);
 
+// Middleware for parsing JSON requests
 app.use(bodyParser.json());
 
-let channel;
-let pendingRequests = {};
-
-const healthCheck = require('../middlewares/healthCheck');
+// Add health check endpoints to the Express application
 healthCheck(app);
 
-const errorHandler = require('../middlewares/errorHandler');
-app.use(errorHandler);
+// Route to handle tasks
+app.get('/', taskHandler);
 
-
-app.get('/', async (req, res, next) => {
-    try {
-        if (!channel) {
-            await setupConnectionAndConsumer();
-            channel = await connect();
-            if (!channel) {
-                throw new Error('Failed to establish a channel with RabbitMQ');
-            }
-        }
-
-        const queue = loadConfig('QUEUE_NAMES.TASKS', 'tasks');
-        channel.assertQueue(queue, { durable: true });
-
-        const correlationId = generateUuid();
-        pendingRequests[correlationId] = res;
-
-        channel.sendToQueue(queue, Buffer.from(JSON.stringify(req.query)), {
-            correlationId: correlationId,
-            replyTo: callbackQueue
-        });
-    } catch (error) {
-        if (error.message.includes('Failed to connect to RabbitMQ')) {
-            return res.status(503).send('Service Unavailable');
-        }
-        next(error);
-    }
-});
-
-const setupConnectionAndConsumer = async () => {
-    try {
-        channel = await connect();
-        if (!channel) {
-            throw new Error('Failed to establish a channel with RabbitMQ');
-        }
-
-        channel.assertQueue(callbackQueue, { durable: true });
-        channel.consume(callbackQueue, (msg) => {
-            const correlationId = msg.properties.correlationId;
-            const res = pendingRequests[correlationId];
-            if (res) {
-                res.send(`Result: ${msg.content.toString()}`);
-                delete pendingRequests[correlationId];
-            }
-        }, { noAck: true });
-    } catch (error) {
-        logger.error('Error setting up connection and consumer:', error.message);
-    }
-};
-
+// Setup the connection and consumer for RabbitMQ tasks
 setupConnectionAndConsumer();
 
-const { v4: uuidv4 } = require('uuid');
-function generateUuid() {
-    return uuidv4();
-}
+// Global error handling middleware
+app.use(errorHandler);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    logger.error('Internal Server Error:', err.message);
-    res.status(500).send('Internal Server Error');
-});
+// Listen for process signals and shutdown gracefully if received
+process.on('SIGINT', () => shutdownGracefully('SIGINT'));
+process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
 
-process.on('SIGINT', async () => {
-    logger.info('Received SIGINT. Shutting down gracefully.');
-    if (channel) {
-        const connection = channel.connection;
-        await connection.close();
-    }
-    process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-    logger.info('Received SIGTERM. Shutting down gracefully.');
-    if (channel) {
-        const connection = channel.connection;
-        await connection.close();
-    }
-    process.exit(0);
-});
-
+// Start the Express application and listen on the specified port
 const server = app.listen(PORT, () => {
     logger.info(`M1 service listening on port ${PORT}`);
 });
 
-module.exports = server; // Export the server instance
+// Export the server for potential external use (e.g., testing)
+module.exports = server;
