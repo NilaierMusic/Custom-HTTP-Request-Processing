@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\config",
+    "\\middlewares",
+    "\\services",
+    "\\tests",
+    "\\utils"
+  ],
+  "SelectedNode": "\\utils\\rabbitmq.js",
+  "PreviewInSolutionExplorer": false
+}

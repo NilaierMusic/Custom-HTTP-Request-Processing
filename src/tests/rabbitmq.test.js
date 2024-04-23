@@ -1,7 +1,7 @@
 // Import required modules and mock external dependencies
 const amqp = require('amqplib');
 jest.mock('amqplib');
-const request = require('supertest');
+const axios = require('axios');
 const { connect } = require('../utils/rabbitmq');
 const { processTasks, handleTaskError, handleMessage } = require('../middlewares/taskServiceM2');
 
@@ -50,15 +50,15 @@ describe('Health Check Endpoints', () => {
     });
 
     it('should return 200 for m1 health check', async () => {
-        const res = await request(m1).get('/health');
-        expect(res.statusCode).toEqual(200);
-        expect(res.text).toEqual('OK');
+        const res = await axios.get(`http://localhost:${m1.address().port}/health`);
+        expect(res.status).toEqual(200);
+        expect(res.data).toEqual('OK');
     });
 
     it('should return 200 for m2 health check', async () => {
-        const res = await request(m2).get('/health');
-        expect(res.statusCode).toEqual(200);
-        expect(res.text).toEqual('OK');
+        const res = await axios.get(`http://localhost:${m2.address().port}/health`);
+        expect(res.status).toEqual(200);
+        expect(res.data).toEqual('OK');
     });
 });
 
