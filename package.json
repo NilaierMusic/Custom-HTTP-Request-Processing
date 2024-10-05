@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.3",
-    "axios": "^1.6.8",
+    "axios": "^1.7.4",
     "concurrently": "^8.2.0",
     "cross-env": "^7.0.3",
     "formidable": "^3.5.1",
